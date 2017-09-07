@@ -1,0 +1,17 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# Mgmt, PXE
+auto br-ex
+iface br-ex inet static
+    bridge_ports eth0
+    address 192.168.12.2
+    netmask 255.255.255.0
+    gateway 192.168.12.1
+    dns-nameservers 8.8.8.8
