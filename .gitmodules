@@ -1,3 +1,0 @@
-[submodule "lib"]
-	path = lib
-	url = git@gitlab.com:DietStack/lib.git
