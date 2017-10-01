@@ -24,6 +24,16 @@ DS_DIR='/srv/dietstack'
 VERSIONS=${VERSIONS-1}
 if [[ -z ${VERSIONS} ]]; then
     echo "Using latest versions!"
+    SQLDB_VER=${SQLDB_VER:-latest}
+    RABBITMQ_VER=${RABBITMQ_VER:-latest}
+    KEYSTONE_VER=${KEYSTONE_VER:-latest}
+    NOVA_VER=${NOVA_VER:-latest}
+    GLANCE_VER=${GLANCE_VER:-latest}
+    NEUTRON_VER=${NEUTRON_VER:-latest}
+    CINDER_VER=${CINDER_VER:-latest}
+    HEAT_VER=${HEAT_VER:-latest}
+    HORIZON_VER=${HORIZON_VER:-latest}
+    OSADMIN_VER=${OSADMIN_VER:-latest}
 else
     if [[ ! -f ${MYHOME}/versions/${VERSIONS} ]]; then
         echo "Version file versions/${VERSIONS} not found !"
@@ -57,18 +67,8 @@ EXTERNAL_INTERFACE=${EXTERNAL_INTERFACE:-'eth0'} # if EXTERNAL_BRIDGE is set, th
                                                  # so to use it set EXTERNAL_BRIDGE=''
 EXTERNAL_IP=${EXTERNAL_IP:-192.168.99.1/24} # doesn't need to be set. If so, EXTERNAL_BRIDGE
                                             # floating IPs won't be reacheable from localhost.
-OVERLAY_INTERFACE=${OVERLAY_INTERFACE:-lo}
-
-SQLDB_VER=${SQLDB_VER:-latest}
-RABBITMQ_VER=${RABBITMQ_VER:-latest}
-KEYSTONE_VER=${KEYSTONE_VER:-latest}
-NOVA_VER=${NOVA_VER:-latest}
-GLANCE_VER=${GLANCE_VER:-latest}
-NEUTRON_VER=${NEUTRON_VER:-latest}
-CINDER_VER=${CINDER_VER:-latest}
-HEAT_VER=${HEAT_VER:-latest}
-HORIZON_VER=${HORIZON_VER:-latest}
-OSADMIN_VER=${OSADMIN_VER:-latest}
+DATA_INTERFACE=${DATA_INTERFACE:-lo}        # Interface for vxlans, storage, apis, infra services
+MGMT_INTERFACE=${MGMT_INTERFACE:-lo}        # Management interface (ssh)
 
 cleanup() {
     local CONTROL=$1
@@ -288,7 +288,7 @@ if [[ $CONTROL_NODE == true ]]; then
                    -e NEUTRON_CONTROLLER="true" \
                    -e EXTERNAL_BRIDGE="$EXTERNAL_BRIDGE" \
                    -e EXTERNAL_IP="$EXTERNAL_IP" \
-                   -e OVERLAY_INTERFACE=${OVERLAY_INTERFACE} \
+                   -e OVERLAY_INTERFACE=${DATA_INTERFACE} \
                    -v /run/netns:/run/netns:shared \
                    -v /lib/modules:/lib/modules \
                    --name neutron-controller.${NAME_SUFFIX} \
@@ -359,6 +359,16 @@ if [[ $CONTROL_NODE == true ]]; then
         exit $ret
     fi
 
+    log_info "Starting discovery container ..."
+    if [[ `docker ps -a | grep -w discovery.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
+        docker start discovery.${NAME_SUFFIX}
+    else
+        docker run -d --net=host -e DATA_INTERFACE=${DATA_INTERFACE} --name=discovery.ds dietstack/osadmin:latest  \
+                    bash -c "socat UDP4-RECVFROM:62699,broadcast,fork EXEC:'python -c \"import os,netifaces; print(netifaces.ifaddresses(os.environ['DATA_INTERFACE']))[netifaces.AF_INET][0]['addr']\"'"
+    fi
+
+   wait_for_port 62699 360
+
     log_info "Bootstrapping keystone ..."
     # bootstrap openstack settings and upload image to glance
     set +e
@@ -391,7 +401,10 @@ if [[ $CONTROL_NODE == true ]]; then
     CONF_DIR=~/.localstack
     mkdir -p $CONF_DIR
     > $CONF_DIR/settings.sh
+    echo "VERSIONS=$VERSIONS" >> $CONF_DIR/settings.sh
     echo "JUST_EXTERNAL_IP=$JUST_EXTERNAL_IP" >> $CONF_DIR/settings.sh
+    echo "MGMT_INTERFACE=$MGMT_INTERFACE"
+    echo "DATA_INTERFACE=$DATA_INTERFACE"
 
 fi
 
@@ -437,7 +450,7 @@ if [[ $COMPUTE_NODE == true ]]; then
                    -e DEBUG="true" \
                    -e NEUTRON_CONTROLLER="false" \
                    -e EXTERNAL_BRIDGE=${EXTERNAL_BRIDGE} \
-                   -e OVERLAY_INTERFACE=${OVERLAY_INTERFACE} \
+                   -e OVERLAY_INTERFACE=${DATA_INTERFACE} \
                    -e DB_HOST=${CONTROL_NODE_IP} \
                    -e KEYSTONE_HOST=${CONTROL_NODE_IP} \
                    -e MEMCACHED_SERVERS=${CONTROL_NODE_IP} \
