@@ -2,8 +2,55 @@
 
 set -e
 
+log_info() {
+    local msg=$1
+    echo -e "\e[33m[ $msg ]\e[0m"
+}
+
+log_error() {
+    local msg=$1
+    echo -e "\e[91m$msg\e[0m"
+}
+
+
+print_help() {
+cat <<-END
+Usage:
+------
+   -h | --help
+     Display this help
+
+Behaviour of script is driven by environment variables. Here are most important ones:
+
+CONTROL_NODE (true/false) - If true, control node containers will be executed. There could be only one control node. True is default.
+COMPUTE_NODE (true/false) - If true, comptue node containers will be executed. Compute node containers can be run also on control node. True is default.
+DS_INTERFACE - interface name where dietstack service will use for communication. lo is default.
+EXTERNAL_IP - external ip address in format ip.add.re.ss/netmask. Default is 192.168.99.1/24. Mandatory on control node.
+
+
+CONTROL_NODE_DS_IP - IP address of control node in DS network. Mandatory on compute node.
+
+Example of deployment:
+======================
+
+Control node:
+  EXTERNAL_IP='192.168.99.2/24' DS_INTERFACE=eth2 /root/dietstack/ds.sh
+
+Compute node:
+   CONTROL_NODE=false DS_INTERFACE=eth2 CONTROL_NODE_DS_IP=192.168.23.2 EXTERNAL_IP='192.168.99.2/24' /root/dietstack/ds.sh
+END
+}
+
+while getopts h option
+do
+ case "${option}" in
+   h) print_help
+      exit;;
+ esac
+done
+
 if [[ $EUID -ne 0 ]]; then
-   echo "Diestack must be run as root"
+   log_error "Diestack must be run as root!"
    exit 1
 fi
 
@@ -11,19 +58,24 @@ readonly MYHOME=$(dirname $(readlink -e $0) )
 
 . ${MYHOME}/lib/functions.sh
 
-log_info() {
-    local msg=$1
-    echo -e "\e[33m[ $msg ]\e[0m"
-}
+NAME_SUFFIX=ds
+DS_DIR=/srv/dietstack
+LOG_DIR=$DS_DIR/log
+CONF_FILE=$DS_DIR/settings.sh
 
-NAME_SUFFIX='ds'
-DS_DIR='/srv/dietstack'
+if [[ -f $CONF_FILE ]]; then
+    log_info "Loading configuration file $CONF_FILE ..."
+    . $CONF_FILE  
+fi
+
+# DOCKER_PROJ_NAME needs to be set due to create_db_osadmin lib function
+export DOCKER_PROJ_NAME=dietstack/
 
 # load containers version
 # VERSIONS Format: Serial number
 VERSIONS=${VERSIONS-1}
 if [[ -z ${VERSIONS} ]]; then
-    echo "Using latest versions!"
+    log_info "Using latest versions!"
     SQLDB_VER=${SQLDB_VER:-latest}
     RABBITMQ_VER=${RABBITMQ_VER:-latest}
     KEYSTONE_VER=${KEYSTONE_VER:-latest}
@@ -36,7 +88,7 @@ if [[ -z ${VERSIONS} ]]; then
     OSADMIN_VER=${OSADMIN_VER:-latest}
 else
     if [[ ! -f ${MYHOME}/versions/${VERSIONS} ]]; then
-        echo "Version file versions/${VERSIONS} not found !"
+        log_error "Version file versions/${VERSIONS} not found!"
         exit 1
     fi
     . ${MYHOME}/versions/${VERSIONS}
@@ -45,11 +97,11 @@ fi
 # what to install (at least one needs to be set to true. Both set to false will cause that no container will run)
 CONTROL_NODE=${CONTROL_NODE:-true}
 COMPUTE_NODE=${COMPUTE_NODE:-true}
-CONTROL_NODE_IP=${CONTROL_NODE_IP:-""}
+CONTROL_NODE_DS_IP=${CONTROL_NODE_DS_IP:-""}
 
-# if we are installing compute node, we need to set CONTROL_NODE_IP
-if [[ $CONTROL_NODE != true && $COMPUTE_NODE == true && $CONTROL_NODE_IP == "" ]]; then
-    echo 'IP of control node missing (please set variable $CONTROL_NODE_IP)'
+# if we are installing compute node, we need to set CONTROL_NODE_DS_IP
+if [[ $CONTROL_NODE != true && $COMPUTE_NODE == true && $CONTROL_NODE_DS_IP == "" ]]; then
+    log_error "IP of control node missing (please set variable $CONTROL_NODE_DS_IP)!"
     exit 1
 fi
 
@@ -60,15 +112,18 @@ RABBITMQ_USER=openstack
 BRANCH=${BRANCH:-master}
 HORIZON_PORT=${HORIZON_PORT:-8082}
 EXTERNAL_BRIDGE=${EXTERNAL_BRIDGE-'br-ex'} # br-ex will be default only if variable is unset.
-                                           # If set to "" external it'll stay set to ""
-                                           # Important in compute node because we need to tell the script that
-                                           # we are not going to use EXTERNAL_BRIDGE
+                                           # If set to "" it will stay set to "" and no external network
+                                           # will be configured. It is important on compute node because we need
+                                           # to tell the script that we are not going to use EXTERNAL_BRIDGE.
 EXTERNAL_INTERFACE=${EXTERNAL_INTERFACE:-'eth0'} # if EXTERNAL_BRIDGE is set, this var is not used
-                                                 # so to use it set EXTERNAL_BRIDGE=''
+                                                 # so to use it set EXTERNAL_BRIDGE='' (Compute node)
 EXTERNAL_IP=${EXTERNAL_IP:-192.168.99.1/24} # doesn't need to be set. If so, EXTERNAL_BRIDGE
                                             # floating IPs won't be reacheable from localhost.
-DATA_INTERFACE=${DATA_INTERFACE:-lo}        # Interface for vxlans, storage, apis, infra services
-MGMT_INTERFACE=${MGMT_INTERFACE:-lo}        # Management interface (ssh)
+                                            # On Compute node needs to be set even EXTERNAL_INTERFACE is set to ''.
+                                            # otherwise spice console in horizon wont work.  
+DS_INTERFACE=${DS_INTERFACE:-lo}            # Interface for vxlans, storage, apis, infra services
+
+DS_INTERFACE_IP=$(ip addr | grep inet | grep -w $DS_INTERFACE | awk -F" " '{print $2}'| sed -e 's/\/.*$//')
 
 cleanup() {
     local CONTROL=$1
@@ -99,9 +154,9 @@ cleanup() {
     fi
     if [[ $COMPUTE == true ]]; then
         docker stop nova-compute.${NAME_SUFFIX} > /dev/null 2>&1 || true
-        docker stop neutron-compute.${NAME_SUFFIX} > /dev/null 2>&1 || true
+        docker stop neutron-agent.${NAME_SUFFIX} > /dev/null 2>&1 || true
         docker rm nova-compute.${NAME_SUFFIX} > /dev/null 2>&1 || true
-        docker rm neutron-compute.${NAME_SUFFIX} > /dev/null 2>&1 || true
+        docker rm neutron-agent.${NAME_SUFFIX} > /dev/null 2>&1 || true
     fi
 }
 
@@ -114,8 +169,8 @@ if [[ "$RESTART" != "true" ]]; then
 fi
 
 if [[ $CONTROL_NODE == true ]]; then
-    log_info "Pulling osadmin container..."
-    docker pull ${OSADMIN_VER}
+#    log_info "Pulling osadmin container..."
+#    docker pull ${OSADMIN_VER}
 
     # Configure host network
     log_info "Configure External Networking ..."
@@ -149,17 +204,22 @@ if [[ $CONTROL_NODE == true ]]; then
     if [[ `docker ps -a | grep -w nfs.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
         docker start nfs.${NAME_SUFFIX}
     else
-        docker run  --net=host -d --privileged --name nfs.${NAME_SUFFIX} \
-                    -v ${DS_DIR}/cindervols:/cindervols -e SHARED_DIRECTORY=/cindervols \
-                    ${NFS_VER}
+        docker run --net=host -d --privileged --name nfs.${NAME_SUFFIX} \
+                   --restart unless-stopped \
+                   -v ${DS_DIR}/cindervols:/cindervols \
+                   -e SHARED_DIRECTORY=/cindervols \
+                   ${NFS_VER}
     fi
 
     log_info "Starting sqldb container ..."
+    mkdir -p ${DS_DIR}/sql     
     if [[ `docker ps -a | grep -w sqldb.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
         docker start sqldb.${NAME_SUFFIX}
     else
         docker run -d --net=host -e MYSQL_ROOT_PASSWORD=$PASSWORDS \
-                                 --name sqldb.${NAME_SUFFIX} ${SQLDB_VER}
+                   --name sqldb.${NAME_SUFFIX} ${SQLDB_VER} --max-connections=300
+
+                   #-v ${DS_DIR}/sql:/var/lib/mysql \
     fi
 
     echo "Wait till sqldb is running ."
@@ -169,14 +229,18 @@ if [[ $CONTROL_NODE == true ]]; then
     if [[ `docker ps -a | grep -w memcached.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
         docker start memcached.${NAME_SUFFIX}
     else
-        docker run -d --net=host -e DEBUG= --name memcached.${NAME_SUFFIX} memcached
+        docker run -d --net=host -e DEBUG= --name memcached.${NAME_SUFFIX} \
+                   --restart unless-stopped \
+                   memcached
     fi
 
     log_info "Starting RabbitMQ container ..."
     if [[ `docker ps -a | grep -w rabbitmq.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
         docker start rabbitmq.${NAME_SUFFIX}
     else
-        docker run -d --net=host -e DEBUG= --name rabbitmq.${NAME_SUFFIX} ${RABBITMQ_VER}
+        docker run -d --net=host -e DEBUG= --name rabbitmq.${NAME_SUFFIX} \
+                   --restart unless-stopped \
+                   ${RABBITMQ_VER}
     fi
 
     wait_for_port 5672 120
@@ -193,8 +257,10 @@ if [[ $CONTROL_NODE == true ]]; then
     else
         create_db_osadmin keystone keystone $PASSWORDS $PASSWORDS
         docker run -d --net=host \
+                   --restart unless-stopped \
                    -e DEBUG="true" \
                    -e DB_SYNC="true" \
+                   -v $LOG_DIR/keystone:/var/log/supervisord \
                    --name keystone.${NAME_SUFFIX} ${KEYSTONE_VER}
     fi
 
@@ -221,9 +287,11 @@ if [[ $CONTROL_NODE == true ]]; then
         create_db_osadmin glance glance $PASSWORDS $PASSWORDS
         mkdir -p ${DS_DIR}/glance-images-osadmin
         docker run -d --net=host \
+                   --restart unless-stopped \
                    -e DEBUG="true" \
                    -e DB_SYNC="true" \
                    -e LOAD_META="true" \
+                   -v $LOG_DIR/glance:/var/log/supervisord \
                    --name glance.${NAME_SUFFIX} ${GLANCE_VER}
     fi
 
@@ -247,11 +315,15 @@ if [[ $CONTROL_NODE == true ]]; then
     else
         create_db_osadmin nova nova $PASSWORDS $PASSWORDS
         create_db_osadmin nova_api nova $PASSWORDS $PASSWORDS || true
+        create_db_osadmin nova_cell0 nova $PASSWORDS $PASSWORDS || true
+        
         docker run -d --net=host --privileged \
+                   --restart unless-stopped \
                    -e DEBUG="true" \
                    -e DB_SYNC="true" \
                    -e NOVA_CONTROLLER="true" \
                    -e SPICE_HOST="$JUST_EXTERNAL_IP" \
+                   -v $LOG_DIR/nova-controller:/var/log/supervisord \
                    --name nova-controller.${NAME_SUFFIX} \
                    ${NOVA_VER}
     fi
@@ -283,14 +355,16 @@ if [[ $CONTROL_NODE == true ]]; then
     else
         create_db_osadmin neutron neutron $PASSWORDS $PASSWORDS
         docker run -d --net=host --privileged \
+                   --restart unless-stopped \
                    -e DEBUG="true" \
                    -e DB_SYNC="true" \
                    -e NEUTRON_CONTROLLER="true" \
                    -e EXTERNAL_BRIDGE="$EXTERNAL_BRIDGE" \
                    -e EXTERNAL_IP="$EXTERNAL_IP" \
-                   -e OVERLAY_INTERFACE=${DATA_INTERFACE} \
+                   -e OVERLAY_INTERFACE=${DS_INTERFACE} \
                    -v /run/netns:/run/netns:shared \
                    -v /lib/modules:/lib/modules \
+                   -v $LOG_DIR/neutron-controller:/var/log/supervisord \
                    --name neutron-controller.${NAME_SUFFIX} \
                    ${NEUTRON_VER}
     fi
@@ -308,8 +382,11 @@ if [[ $CONTROL_NODE == true ]]; then
     else
         create_db_osadmin cinder cinder $PASSWORDS $PASSWORDS
         docker run -d --net=host --privileged \
+                   --restart unless-stopped \
                    -e DEBUG="true" \
                    -e DB_SYNC="true" \
+                   -e NAS_HOST=$DS_INTERFACE_IP \
+                   -v $LOG_DIR/cinder:/var/log/supervisord \
                    --name cinder.${NAME_SUFFIX} \
                    ${CINDER_VER}
     fi
@@ -328,8 +405,10 @@ if [[ $CONTROL_NODE == true ]]; then
     else
         create_db_osadmin heat heat $PASSWORDS $PASSWORDS
         docker run -d --net=host \
+                   --restart unless-stopped \
                    -e DEBUG="true" \
                    -e DB_SYNC="true" \
+                   -v $LOG_DIR/heat:/var/log/supervisord \
                    --name heat.${NAME_SUFFIX} \
                    ${HEAT_VER}
     fi
@@ -341,13 +420,38 @@ if [[ $CONTROL_NODE == true ]]; then
         exit $ret
     fi
 
+   log_info "Starting magnum container ..."
+    if [[ `docker ps -a | grep -w magnum.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
+        docker start magnum.${NAME_SUFFIX}
+    else
+        create_db_osadmin magnum magnum $PASSWORDS $PASSWORDS
+        docker run -d --net=host \
+                   --restart unless-stopped \
+                   -e DEBUG="true" \
+                   -e DB_SYNC="true" \
+                   -e KEYSTONE_HOST="$JUST_EXTERNAL_IP" \
+                   -v $LOG_DIR/magnum:/var/log/supervisord \
+                   --name magnum.${NAME_SUFFIX} \
+                   ${MAGNUM_VER}
+    fi
+
+    wait_for_port 8004 360
+    ret=$?
+    if [ $ret -ne 0 ]; then
+        echo "Error: Port 8004 (Heat API) not bounded!"
+        exit $ret
+    fi
+
+
     log_info "Starting horizon container ..."
     if [[ `docker ps -a | grep -w horizon.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
         docker start horizon.${NAME_SUFFIX}
     else
         docker run -d --net=host \
+                   --restart unless-stopped \
                    -e DEBUG="true" \
                    -e HORIZON_HTTP_PORT="$HORIZON_PORT" \
+                   -v $LOG_DIR/horizon:/var/log/supervisord \
                    --name horizon.${NAME_SUFFIX} \
                    ${HORIZON_VER}
     fi
@@ -363,8 +467,8 @@ if [[ $CONTROL_NODE == true ]]; then
     if [[ `docker ps -a | grep -w discovery.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
         docker start discovery.${NAME_SUFFIX}
     else
-        docker run -d --net=host -e DATA_INTERFACE=${DATA_INTERFACE} --name=discovery.ds dietstack/osadmin:latest  \
-                    bash -c "socat UDP4-RECVFROM:62699,broadcast,fork EXEC:'python -c \"import os,netifaces; print(netifaces.ifaddresses(os.environ['DATA_INTERFACE']))[netifaces.AF_INET][0]['addr']\"'"
+        docker run -d --net=host -e DS_INTERFACE=${DS_INTERFACE} --name=discovery.ds dietstack/osadmin:latest  \
+                    bash -c "socat UDP4-RECVFROM:62699,broadcast,fork EXEC:'python -c \"import os,netifaces; print(netifaces.ifaddresses(os.environ['DS_INTERFACE']))[netifaces.AF_INET][0]['addr']\"'"
     fi
 
    wait_for_port 62699 360
@@ -385,26 +489,17 @@ if [[ $CONTROL_NODE == true ]]; then
     fi
     set -e
 
-    docker run --rm --net=host ${OSADMIN_VER} /bin/bash -c ". /app/adminrc; openstack image list | grep -q cirros || \
-                                                              openstack image create --container-format bare \
-                                                              --disk-format qcow2 \
-                                                              --file /app/cirros.img \
-                                                              --public cirros"
+    docker run --rm --net=host ${OSADMIN_VER} /bin/bash -c "wget https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img -O /app/cirros.img; \
+                                                            . /app/adminrc; openstack image list | grep -q cirros || \
+                                                            openstack image create --container-format bare \
+                                                            --disk-format qcow2 \
+                                                            --file /app/cirros.img \
+                                                            --public cirros"
     ret=$?
     if [ $ret -ne 0 ]; then
         echo "Error: Cirros image import error ${ret}!"
         exit $ret
     fi
-
-    ## Save configuration of current cloud for later use in destroy or upgrade phases
-    ## This is TODO
-    CONF_DIR=~/.localstack
-    mkdir -p $CONF_DIR
-    > $CONF_DIR/settings.sh
-    echo "VERSIONS=$VERSIONS" >> $CONF_DIR/settings.sh
-    echo "JUST_EXTERNAL_IP=$JUST_EXTERNAL_IP" >> $CONF_DIR/settings.sh
-    echo "MGMT_INTERFACE=$MGMT_INTERFACE"
-    echo "DATA_INTERFACE=$DATA_INTERFACE"
 
 fi
 
@@ -415,6 +510,10 @@ if [[ $COMPUTE_NODE == true ]]; then
     if [[ `docker ps -a | grep -w nova-compute.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
         docker start nova-compute.${NAME_SUFFIX}
     else
+        if [[ ! -z $EXTERNAL_IP ]]; then
+            JUST_EXTERNAL_IP=$(echo $EXTERNAL_IP | cut -d"/" -f 1)
+        fi
+
         # thanks to clayton.oneil@charter.com
         # source: https://www.openstack.org/videos/video/dockerizing-the-hard-services-neutron-and-nova
         # mounting of cinder volumes done by nova-compute inside container needs to be visible
@@ -424,43 +523,66 @@ if [[ $COMPUTE_NODE == true ]]; then
         mount --make-shared /var/lib/nova/mnt
 
         docker run -d --net=host  --privileged \
+                   --restart unless-stopped \
                    -e DEBUG="true" \
                    -e NOVA_CONTROLLER="false" \
-                   -e SPICE_HOST="$JUST_EXTERNAL_IP" \
-                   -e DB_HOST=${CONTROL_NODE_IP} \
-                   -e KEYSTONE_HOST=${CONTROL_NODE_IP} \
-                   -e MEMCACHED_SERVERS=${CONTROL_NODE_IP} \
-                   -e GLANCE_HOST=${CONTROL_NODE_IP} \
-                   -e NEUTRON_HOST=${CONTROL_NODE_IP} \
-                   -e RABBITMQ_HOST=${CONTROL_NODE_IP} \
+                   -e SPICE_HOST=${JUST_EXTERNAL_IP} \
+                   -e SPICE_PROXY_HOST=${DS_INTERFACE_IP} \
+                   -e DB_HOST=${CONTROL_NODE_DS_IP} \
+                   -e KEYSTONE_HOST=${CONTROL_NODE_DS_IP} \
+                   -e MEMCACHED_SERVERS=${CONTROL_NODE_DS_IP} \
+                   -e GLANCE_HOST=${CONTROL_NODE_DS_IP} \
+                   -e NEUTRON_HOST=${CONTROL_NODE_DS_IP} \
+                   -e RABBITMQ_HOST=${CONTROL_NODE_DS_IP} \
                    -v /sys/fs/cgroup:/sys/fs/cgroup \
                    -v /var/lib/nova:/var/lib/nova \
                    -v /var/lib/nova/mnt:/var/lib/nova/mnt:shared \
                    -v /var/lib/libvirt:/var/lib/libvirt \
                    -v /run:/run \
+                   -v $LOG_DIR/nova-compute:/var/log/supervisord \
                    --name nova-compute.${NAME_SUFFIX} \
                    ${NOVA_VER}
-    fi
-
-    log_info "Starting neutron-compute container ..."
-    if [[ `docker ps -a | grep -w neutron-compute.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
-        docker start neutron-compute.${NAME_SUFFIX}
-    else
-        docker run -d --net=host --privileged \
-                   -e DEBUG="true" \
-                   -e NEUTRON_CONTROLLER="false" \
-                   -e EXTERNAL_BRIDGE=${EXTERNAL_BRIDGE} \
-                   -e OVERLAY_INTERFACE=${DATA_INTERFACE} \
-                   -e DB_HOST=${CONTROL_NODE_IP} \
-                   -e KEYSTONE_HOST=${CONTROL_NODE_IP} \
-                   -e MEMCACHED_SERVERS=${CONTROL_NODE_IP} \
-                   -e RABBITMQ_HOST=${CONTROL_NODE_IP} \
-                   -v /run/netns:/run/netns:shared \
-                   -v /lib/modules:/lib/modules \
-                   --name neutron-compute.${NAME_SUFFIX} \
-                   ${NEUTRON_VER}
+        if [[ $CONTROL_NODE == true ]]; then
+            # if running compute on same host as controller discover compute node by nova
+            sleep 5
+            docker exec nova-controller.${NAME_SUFFIX} nova-manage cell_v2 discover_hosts
+        fi
     fi
 fi
+
+log_info "Starting neutron-agent container ..."
+if [[ `docker ps -a | grep -w neutron-agent.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
+    docker start neutron-agent.${NAME_SUFFIX}
+else
+    if [[ $CONTROL_NODE != true ]]; then
+        # EXTERNAL_BRIDGE is empty on COMPUTE_NODE as DVR is not implemented yet
+        EXTERNAL_BRIDGE=''
+    fi
+    docker run -d --net=host --privileged \
+	           --restart unless-stopped \
+	           -e DEBUG="true" \
+	           -e NEUTRON_CONTROLLER="false" \
+	           -e EXTERNAL_BRIDGE=${EXTERNAL_BRIDGE} \
+	           -e OVERLAY_INTERFACE=${DS_INTERFACE} \
+	           -e DB_HOST=${CONTROL_NODE_DS_IP} \
+	           -e KEYSTONE_HOST=${CONTROL_NODE_DS_IP} \
+	           -e MEMCACHED_SERVERS=${CONTROL_NODE_DS_IP} \
+	           -e RABBITMQ_HOST=${CONTROL_NODE_DS_IP} \
+	           -v /run/netns:/run/netns:shared \
+	           -v /lib/modules:/lib/modules \
+	           -v $LOG_DIR/neutron-agent:/var/log/supervisord \
+	           --name neutron-agent.${NAME_SUFFIX} \
+	           ${NEUTRON_VER}
+fi
+
+## Save configuration of current cloud for later use in destroy or upgrade phases
+> $CONF_FILE
+echo "VERSIONS=$VERSIONS" >> $CONF_FILE
+echo "CONTROL_NODE=$CONTROL_NODE" >> $CONF_FILE
+echo "COMPUTE_NODE=$COMPUTE_NODE" >> $CONF_FILE
+echo "EXTERNAL_IP=$EXTERNAL_IP" >> $CONF_FILE
+echo "DS_INTERFACE=$DS_INTERFACE" >> $CONF_FILE
+echo "EXTERNAL_BRIDGE=$EXTERNAL_BRIDGE" >> $CONF_FILE
 
 
 if [[ $CONTROL_NODE == true ]]; then
@@ -471,8 +593,8 @@ if [[ $CONTROL_NODE == true ]]; then
     echo -e "Admin credentials - User: admin, Password: $PASSWORDS"
     echo -e "Demo project creadentials - User: demo, Password: $PASSWORDS"
     echo -e ""
-    echo -e "For operating localstack with OpenStack client, run (it'll run osadmin container)"
-    echo -e "'\e[93m./dscli.sh\e[0m'"
+    echo -e "For operating localstack with OpenStack client, run"
+    echo -e "'\e[93m./dscli.sh\e[0m' (it'll run osadmin container)"
     echo -e ""
     echo -e "You can use \e[93mfirst_vm.sh\e[0m script in osadmin container"
     echo -e "to build your first VM in demo project and you can use it"

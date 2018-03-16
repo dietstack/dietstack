@@ -1,0 +1,10 @@
+auto eth1
+iface eth1 inet manual
+
+ # Bridge setup
+auto br-ex
+iface br-ex inet static
+    bridge_ports eth1
+    address 192.168.99.2
+    netmask 255.255.255.0
+

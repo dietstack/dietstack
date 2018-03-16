@@ -1,0 +1,12 @@
+SQLDB_VER=mariadb:10.1
+RABBITMQ_VER=rabbitmq:3.6.10
+NFS_VER=itsthenetwork/nfs-server-alpine:latest
+KEYSTONE_VER=dietstack/keystone:latest
+GLANCE_VER=dietstack/glance:latest
+NOVA_VER=dietstack/nova:latest
+NEUTRON_VER=dietstack/neutron:latest
+CINDER_VER=dietstack/cinder:latest
+HEAT_VER=dietstack/heat:latest
+MAGNUM_VER=dietstack/magnum:latest
+HORIZON_VER=dietstack/horizon:latest
+OSADMIN_VER=dietstack/osadmin:latest

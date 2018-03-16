@@ -7,5 +7,5 @@ NOVA_VER=dietstack/nova:newton-8-geedb799
 NEUTRON_VER=dietstack/neutron:newton-6-g7dfe68a
 CINDER_VER=dietstack/cinder:newton-12-g720b12f
 HEAT_VER=dietstack/heat:newton-4-ge677a4f
-HORIZON_VER=dietstack/horizon:newton-6-g29ebb64
-OSADMIN_VER=dietstack/osadmin:newton-9-g6b6ae29
+HORIZON_VER=dietstack/horizon:newton-8-g296082d
+OSADMIN_VER=dietstack/osadmin:newton-11-g8a9ec4e
