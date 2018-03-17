@@ -14,8 +14,8 @@ upstream repositories. This makes DietStack independent from major linux distros
 HA configuration is not supported as it increases complexity significantly and
 availability of small installations can be solved other way.
 
-Deployed OpenStack services
----------------------------
+OpenStack services in DietStack
+-------------------------------
 
 - Keystone (Identity Management)
 - Glance (Images)
@@ -23,6 +23,11 @@ Deployed OpenStack services
 - Neutron (Networking)
 - Cinder (Block Storage)
 - Heat (Orchestration)
+
+OpenStack version
+-----------------
+Version 1 of DietStack was based on ``Newton`` version of OpenStack. Current version is version 2,
+and is based on ``Pike``.
 
 How DietStack can be used
 -------------------------
@@ -39,6 +44,6 @@ node and 9 compute nodes. It should be enough for most SOHO purposes.
 Nevertheless technically there is no built-in limit in DietStack itself, so you can
 try to deploy it on more nodes if you want.
 
-.. _Docker: http://www.docker.com/
+.. _Docker: https://www.docker.com/
 
 Continue to :ref:`installation`

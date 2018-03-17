@@ -14,6 +14,5 @@ User's Guide
 
    foreword
    installation
-
-
-
+   development
+   
