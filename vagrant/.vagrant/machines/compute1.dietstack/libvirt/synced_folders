@@ -1,1 +1,0 @@
-{"rsync":{"/root/dietstack":{"type":"rsync","rsync_exclude":".git/","guestpath":"/root/dietstack","hostpath":"/home/kmadac/devel/openstack/dietstack/debian9/dietstack","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"}}}
