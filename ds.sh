@@ -73,7 +73,7 @@ export DOCKER_PROJ_NAME=dietstack/
 
 # load containers version
 # VERSIONS Format: Serial number
-VERSIONS=${VERSIONS-1}
+VERSIONS=${VERSIONS-dev-pike}
 if [[ -z ${VERSIONS} ]]; then
     log_info "Using latest versions!"
     SQLDB_VER=${SQLDB_VER:-latest}
