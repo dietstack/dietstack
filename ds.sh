@@ -500,18 +500,6 @@ if [[ $CONTROL_NODE == true ]]; then
     fi
     set -e
 
-    docker run --rm --net=host ${OSADMIN_VER} /bin/bash -c "wget https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img -O /app/cirros.img; \
-                                                            . /app/adminrc; openstack image list | grep -q cirros || \
-                                                            openstack image create --container-format bare \
-                                                            --disk-format qcow2 \
-                                                            --file /app/cirros.img \
-                                                            --public cirros"
-    ret=$?
-    if [ $ret -ne 0 ]; then
-        echo "Error: Cirros image import error ${ret}!"
-        exit $ret
-    fi
-
 fi
 
 ##### Compute containers
