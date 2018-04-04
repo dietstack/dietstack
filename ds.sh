@@ -160,6 +160,16 @@ cleanup() {
     fi
 }
 
+export DEBIAN_FRONTEND=noninteractive
+
+log_info "Install requirements ..."
+. ${MYHOME}/utils/install-reqs-ds.sh
+reqs=$(requirements)
+if [ "$reqs" -ne "0" ]; then
+   log_error "Unsupported OS version!" 
+   exit 1
+fi
+
 log_info "Starting DietStack version $VERSIONS ..."
 
 
