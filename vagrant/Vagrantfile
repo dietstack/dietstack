@@ -25,8 +25,7 @@ Vagrant.configure("2") do |config|
         sudo bash -c "mkdir /root/.ssh/; echo #{ssh_pub_key} >> /root/.ssh/authorized_keys"
         sudo cp /root/dietstack/vagrant/interfaces_br-ex /etc/network/interfaces.d/br-ex
         sudo bash -c "apt-get install -y bridge-utils && ifup br-ex"
-        sudo bash -c "/root/dietstack/ds_install_reqs.sh"
-        sudo bash -c "VERSIONS=1 COMPUTE_NODE=false EXTERNAL_IP='192.168.99.2/24' DS_INTERFACE=eth2 /root/dietstack/ds.sh"
+        sudo bash -c "VERSIONS=dev-pike COMPUTE_NODE=false EXTERNAL_IP='192.168.99.2/24' DS_INTERFACE=eth2 /root/dietstack/ds.sh"
       SHELL
     end
   end
@@ -55,8 +54,7 @@ Vagrant.configure("2") do |config|
         s.inline = <<-SHELL
           echo #{ssh_pub_key} >> /home/$USER/.ssh/authorized_keys
           sudo bash -c "mkdir /root/.ssh/; echo #{ssh_pub_key} >> /root/.ssh/authorized_keys"
-          sudo bash -c "/root/dietstack/ds_install_reqs.sh"
-          sudo bash -c "VERSIONS=1 CONTROL_NODE=false DS_INTERFACE=eth2 CONTROL_NODE_DS_IP=192.168.23.2 EXTERNAL_IP='192.168.99.2/24' /root/dietstack/ds.sh"
+          sudo bash -c "VERSIONS=dev-pike CONTROL_NODE=false DS_INTERFACE=eth2 CONTROL_NODE_DS_IP=192.168.23.2 EXTERNAL_IP='192.168.99.2/24' /root/dietstack/ds.sh"
         SHELL
       end
     end
