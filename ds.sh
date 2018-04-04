@@ -227,9 +227,8 @@ if [[ $CONTROL_NODE == true ]]; then
         docker start sqldb.${NAME_SUFFIX}
     else
         docker run -d --net=host -e MYSQL_ROOT_PASSWORD=$PASSWORDS \
+                   -v ${DS_DIR}/sql:/var/lib/mysql \
                    --name sqldb.${NAME_SUFFIX} ${SQLDB_VER} --max-connections=300
-
-                   #-v ${DS_DIR}/sql:/var/lib/mysql \
     fi
 
     echo "Wait till sqldb is running ."
