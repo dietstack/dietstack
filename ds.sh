@@ -186,20 +186,20 @@ if [[ $CONTROL_NODE == true ]]; then
     log_info "Configure External Networking ..."
     ip a s | grep -q $EXTERNAL_BRIDGE || { brctl addbr $EXTERNAL_BRIDGE && ip link set dev $EXTERNAL_BRIDGE up; }
     if [[ ! -z $EXTERNAL_IP ]]; then
-        EXTERN_NET=$(docker run --rm -e EXTERNAL_IP="$EXTERNAL_IP" ${OSADMIN_VER} \
-                     python -c 'import os,ipaddress; print(str(ipaddress.IPv4Interface(os.environ["EXTERNAL_IP"]).network))' | tail -n 1)
+        EXTERNAL_NET=$(docker run --rm -e EXTERNAL_IP="$EXTERNAL_IP" ${OSADMIN_VER} \
+                       python -c 'import os,ipaddress; print(str(ipaddress.IPv4Interface(os.environ["EXTERNAL_IP"]).network))' | tail -n 1)
         if [[ ! `ip addr | awk '/inet/ && /'"$EXTERNAL_BRIDGE"'/{print $2}' | grep "$EXTERNAL_IP"` ]]; then
             ip addr add $EXTERNAL_IP dev $EXTERNAL_BRIDGE
-            if [[ ! `ip r | grep -w "$EXTERN_NET"` ]]; then
-                ip route add $EXTERN_NET dev $EXTERNAL_BRIDGE
+            if [[ ! `ip r | grep -w "$EXTERNAL_NET"` ]]; then
+                ip route add $EXTERNAL_NET dev $EXTERNAL_BRIDGE
             fi
         fi
         # Docker from version 1.13 started to set FORWARD chain policy to DROP for security reasons,
         # so we need to add rule which allows us access  of floating IPs from outside of host
         # More: https://github.com/docker/docker/issues/14041
-        if [[ ! `iptables -L FORWARD -n | grep ACCEPT | grep $EXTERN_NET` ]]; then
-            iptables -A FORWARD -p all -d $EXTERN_NET -j ACCEPT -m comment --comment "DietStack"
-            iptables -A FORWARD -p all -s $EXTERN_NET -j ACCEPT -m comment --comment "DietStack"
+        if [[ ! `iptables -L FORWARD -n | grep ACCEPT | grep $EXTERNAL_NET` ]]; then
+            iptables -A FORWARD -p all -d $EXTERNAL_NET -j ACCEPT -m comment --comment "DietStack"
+            iptables -A FORWARD -p all -s $EXTERNAL_NET -j ACCEPT -m comment --comment "DietStack"
         fi
 
         JUST_EXTERNAL_IP=$(echo $EXTERNAL_IP | cut -d"/" -f 1)
@@ -461,6 +461,7 @@ if [[ $CONTROL_NODE == true ]]; then
                    --restart unless-stopped \
                    -e DEBUG="true" \
                    -e HORIZON_HTTP_PORT="$HORIZON_PORT" \
+                   -e JUST_EXTERNAL_IP="$JUST_EXTERNAL_IP" \
                    -v $LOG_DIR/horizon:/var/log/supervisord \
                    --name horizon.${NAME_SUFFIX} \
                    ${HORIZON_VER}
@@ -587,13 +588,14 @@ fi
 
 ## Save configuration of current cloud for later use in destroy or upgrade phases
 > $CONF_FILE
-echo "VERSIONS=$VERSIONS" >> $CONF_FILE
-echo "CONTROL_NODE=$CONTROL_NODE" >> $CONF_FILE
-echo "COMPUTE_NODE=$COMPUTE_NODE" >> $CONF_FILE
-echo "EXTERNAL_IP=$EXTERNAL_IP" >> $CONF_FILE
-echo "DS_INTERFACE=$DS_INTERFACE" >> $CONF_FILE
-echo "EXTERNAL_BRIDGE=$EXTERNAL_BRIDGE" >> $CONF_FILE
-
+echo "export VERSIONS=$VERSIONS" >> $CONF_FILE
+echo "export CONTROL_NODE=$CONTROL_NODE" >> $CONF_FILE
+echo "export COMPUTE_NODE=$COMPUTE_NODE" >> $CONF_FILE
+echo "export EXTERNAL_IP=$EXTERNAL_IP" >> $CONF_FILE
+echo "export EXTERNAL_NET=$EXTERNAL_NET" >> $CONF_FILE
+echo "export DS_INTERFACE=$DS_INTERFACE" >> $CONF_FILE
+echo "export EXTERNAL_BRIDGE=$EXTERNAL_BRIDGE" >> $CONF_FILE
+echo "export CONTROL_NODE_DS_IP=$CONTROL_NODE_DS_IP" >> $CONF_FILE
 
 if [[ $CONTROL_NODE == true ]]; then
     echo ""
