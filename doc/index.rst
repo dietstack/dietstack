@@ -4,7 +4,7 @@ Welcome to DietStack's documentation!
 =====================================
 
 Dietstack is minimalistic OpenStack distribution which is focused on simple
-deployment and easy upgrades.
+deployment, transparent management and easy upgrades.
 
 User's Guide
 ------------
@@ -14,5 +14,6 @@ User's Guide
 
    foreword
    installation
+   user-guide 
    development
    

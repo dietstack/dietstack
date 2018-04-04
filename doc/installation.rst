@@ -105,4 +105,4 @@ Requirements
 .. image:: images/dietstack_net_1.svg                                                               
    :align: center 
 
-Continue to :ref:`development`
+Continue to :ref:`user-guide`
