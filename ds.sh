@@ -430,28 +430,28 @@ if [[ $CONTROL_NODE == true ]]; then
         exit $ret
     fi
 
-   log_info "Starting magnum container ..."
-    if [[ `docker ps -a | grep -w magnum.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
-        docker start magnum.${NAME_SUFFIX}
-    else
-        create_db_osadmin magnum magnum $PASSWORDS $PASSWORDS
-        docker run -d --net=host \
-                   --restart unless-stopped \
-                   -e DEBUG="true" \
-                   -e DB_SYNC="true" \
-                   -e KEYSTONE_HOST="$JUST_EXTERNAL_IP" \
-                   -v $LOG_DIR/magnum:/var/log/supervisord \
-                   --name magnum.${NAME_SUFFIX} \
-                   ${MAGNUM_VER}
-    fi
-
-    wait_for_port 8004 360
-    ret=$?
-    if [ $ret -ne 0 ]; then
-        echo "Error: Port 8004 (Heat API) not bounded!"
-        exit $ret
-    fi
-
+#   log_info "Starting magnum container ..."
+#    if [[ `docker ps -a | grep -w magnum.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
+#        docker start magnum.${NAME_SUFFIX}
+#    else
+#        create_db_osadmin magnum magnum $PASSWORDS $PASSWORDS
+#        docker run -d --net=host \
+#                   --restart unless-stopped \
+#                   -e DEBUG="true" \
+#                   -e DB_SYNC="true" \
+#                   -e KEYSTONE_HOST="$JUST_EXTERNAL_IP" \
+#                   -v $LOG_DIR/magnum:/var/log/supervisord \
+#                   --name magnum.${NAME_SUFFIX} \
+#                   ${MAGNUM_VER}
+#    fi
+#
+#    wait_for_port 8004 360
+#    ret=$?
+#    if [ $ret -ne 0 ]; then
+#        echo "Error: Port 8004 (magnum) not bounded!"
+#        exit $ret
+#    fi
+#
 
     log_info "Starting horizon container ..."
     if [[ `docker ps -a | grep -w horizon.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
