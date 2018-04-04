@@ -5,6 +5,15 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+ABSOLUTE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo -e -n "\e[91m"
+read -p "!!! This will destroy your DietStack cloud. Do you want to continue? " -n 1 -r
+echo -e "\e[0m"                                                                                       
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+  exit 1
+fi
+
 NAME_SUFFIX='ds'
 
 echo "Stopping and removing DietStack containers ..."
@@ -42,4 +51,9 @@ docker rm nfs.${NAME_SUFFIX} > /dev/null 2>&1
 docker rm discovery.${NAME_SUFFIX} > /dev/null 2>&1
 
 # network/vms cleanup
-./clean-ds.sh
+$ABSOLUTE_PATH/clean-ds.sh
+
+# database data deletion
+echo "Deleting SQL data ..."
+rm -rf /srv/dietstack/sql
+echo "Done"
