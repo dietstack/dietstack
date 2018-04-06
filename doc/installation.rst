@@ -46,10 +46,9 @@ Requirements
 
 .. code-block:: bash
 
-    git clone https://github.com/dietstack/dietstack.git
+    git clone https://github.com/dietstack/dietstack.git --recursive
     cd dietstack
-    sudo ./install_requirements.sh
-    sudo ./runds.sh
+    sudo ./ds.sh
 
 Now you can connect to Horizon Dashboard :) - http://192.168.99.1:8082
 
@@ -70,18 +69,18 @@ Requirements
 
 Then you can run::                                                                               
                                                                                                     
-    git clone https://github.com/dietstack/dietstack.git                                            
-    cd dietstack/vagrant                                                                            
-    vagrant up                                                                                      
+    git clone https://github.com/dietstack/dietstack.git --recursive
+    cd dietstack/vagrant
+    vagrant up
                                                                                                     
-You can connect to Horizon Dasboard on http://192.168.99.2:8082                                     
+You can connect to Horizon Dasboard on http://192.168.99.2:8082
+
+You can also run OpenStack client to manage OpenStack cloud from cli::
                                                                                                     
-You can also run OpenStack client to manage OpenStack cloud from cli::                              
-                                                                                                    
-    vagrant ssh control.dietstack                                                                   
-    cd dietstack                                                                                    
-    ./dscli.sh                                                                                      
-                                                                                                    
+    vagrant ssh control.dietstack
+    cd dietstack
+    ./dscli.sh
+
 3. Multi-Node Installation                                                                          
 --------------------------                                                                          
 
