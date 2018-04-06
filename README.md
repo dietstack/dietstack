@@ -34,7 +34,7 @@ script.
 Here is example that tell you have to get Dietstack running on your local machine.
 
 ```
-git clone https://github.com/dietstack/dietstack.git
+git clone https://github.com/dietstack/dietstack.git --recursive
 cd dietstack
 sudo ./ds.sh
 ```
