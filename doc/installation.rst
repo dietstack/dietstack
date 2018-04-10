@@ -78,14 +78,15 @@ You can connect to Horizon Dasboard on http://192.168.99.2:8082
 You can also run OpenStack client to manage OpenStack cloud from cli::
                                                                                                     
     vagrant ssh control.dietstack
-    cd dietstack
+    sudo su -
+    cd /root/dietstack
     ./dscli.sh
 
 3. Multi-Node Installation                                                                          
 --------------------------                                                                          
 
 This is installation you will need to use when you would like to use DietStack for the real
-purposes.                                                                                   
+purposes.
 
 Requirements
 ^^^^^^^^^^^^
