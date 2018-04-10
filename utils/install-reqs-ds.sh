@@ -55,6 +55,7 @@ EOF
 EOF
                     apt-get update && apt-get -y install docker-ce
                     systemctl daemon-reload && systemctl restart docker.service
+                fi
             fi
         fi
     else
