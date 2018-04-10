@@ -91,14 +91,14 @@ purposes.
 Requirements
 ^^^^^^^^^^^^
 
-1. Debian 9 or Ubuntu 16.04 already installed on all nodes
+1. Debian 9, Ubuntu 16.04 or Ubuntu 18.04 already installed on all nodes
 2. At least 8GB RAM on Control-Node
-3. At least two ethernet interfaces on Control-Node (One for external connectivity and one for 
+3. At least two ethernet interfaces on Control-Node (one for external connectivity and one for 
    DS network)
-4. At least one ethernet interface on Compute-Node (DS Network)
-5. One DS switch (1G/10G) to connect all nodes (DS Network)
+4. At least one ethernet interface on each Compute-Node (DS Network)
+5. One switch (1G/10G) to connect all nodes (DS Network)
 6. Couple of ethernet cables to connect nodes with a switch
-7. Dedicated block device (mirrored) for Cinder volumes (optional)
+7. Dedicated block device (mirrored if possible) for Cinder volumes (optional)
 8. Dedicated block device for Mysql backups (optional)
 9. ``root`` privileges or ability to get then with ``sudo`` on all nodes
                                                                                                                                                                                                        
