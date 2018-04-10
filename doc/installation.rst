@@ -101,8 +101,67 @@ Requirements
 7. Dedicated block device (mirrored if possible) for Cinder volumes (optional)
 8. Dedicated block device for Mysql backups (optional)
 9. ``root`` privileges or ability to get then with ``sudo`` on all nodes
-                                                                                                                                                                                                       
-.. image:: images/dietstack_net_1.svg                                                               
-   :align: center 
+
+
+Network diagram
+^^^^^^^^^^^^^^^
+
+.. image:: images/dietstack_net_1.svg
+   :align: center
+
+Control node
+~~~~~~~~~~~~
+
+First and most complex step is to prepare networking. Interface for external connectivity and
+interface for DS network.
+
+
+For external connectivity you need setup ``br-ex`` interface. As it is a ``linux bridge`` we need
+to add physical interface into it. Let's say interface `ens3` is connected to switch to
+your network and will be used by users to access VMs. Lets say your external network has subnet
+10.0.0.0/16, IP address on ens3 interface is 10.0.0.2 and default gw is 10.0.0.1.
+
+Create file called ``/etc/network/interfaces.d/br-ex`` with following
+content::
+
+	auto ens3
+	iface ens3 inet manual
+
+	# Bridge setup
+	auto br-ex
+	iface br-ex inet static
+		bridge_ports ens3
+		address 10.0.0.2
+		netmask 255.255.0.0
+
+Remove ``ens3`` lines from ``/etc/network/interfaces`` and install ``bridge-utils`` package::
+
+    apt-get install -y bridge-utils
+
+Now you can setup your DS network interface. DS network is used for communication between all
+openstack services, for vxlans tunnels and for nfs mounts, so it has to be separated from
+external network. Do not use DHCP in DS network, but use static assignment. Let's say name of
+your DS interface is ``ens4``. You can freely choose same subnet as we did (192.168.1.0/24), so
+``192.168.1.1`` for you control node is OK.
+
+Create file ``/etc/network/interfaces.d/ds-net`` with following content::
+
+    auto ens4
+    iface ens4 inet static
+        address 192.168.1.1
+        netmask 255.255.255.0
+
+Now you can reboot your node. After the reboot, ensure that your ``br-ex`` interface is up and have
+ip address assigned (``ip a s``). Do the same for your DS network interface.
+
+If yes you can install control node of dietstack::
+
+    sudo su -
+    git clone https://github.com/dietstack/dietstack.git --recursive
+    cd dietstack
+    COMPUTE_NODE=false EXTERNAL_IP='10.0.0.2/16' DS_INTERFACE=ens4 ./ds.sh
+
+Compute nodes
+~~~~~~~~~~~~~
 
 Continue to :ref:`user-guide`
