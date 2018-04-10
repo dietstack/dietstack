@@ -12,7 +12,7 @@ requirements() {
     DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
     DVERSION=$(lsb_release -cs | tr '[:upper:]' '[:lower:]')
 
-    if [[ $DVERSION == "jessie" || $DVERSION == "stretch" || $DVERSION == "xenial" || $DVERSION == "bionic"]]; then
+    if [[ $DVERSION == "jessie" || $DVERSION == "stretch" || $DVERSION == "xenial" || $DVERSION == "bionic" ]]; then
         LIBVIRT_PKG=libvirt-bin
         if  [[ $DVERSION == "stretch" ]]; then
             LIBVIRT_PKG="libvirt-daemon libvirt-daemon-system libvirt-clients"

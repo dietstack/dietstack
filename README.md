@@ -6,7 +6,7 @@ There are many OpenStack distributions which tries to be very universal and to c
 This makes them too complex, tough to install and maintain. On the contrary DietStack is focused
 on simplicity of installation, maintenance, upgrade, backup and restore. 
 
-Only requirement instead of Linux is Docker.
+Only requirements are Linux, Docker and Git to clone DietStack.
 All OpenStack services are running in docker containers and all docker images are also built with
 minimal size in mind.
 
