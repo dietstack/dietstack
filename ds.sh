@@ -594,14 +594,14 @@ if [[ $CONTROL_NODE == true ]]; then
     echo -e "Admin credentials - User: admin, Password: $PASSWORDS"
     echo -e "Demo project creadentials - User: demo, Password: $PASSWORDS"
     echo -e ""
-    echo -e "For operating localstack with OpenStack client, run"
-    echo -e "'\e[93m./dscli.sh\e[0m' (it'll run osadmin container)"
+    echo -e "For managing the cloud with OpenStack client, run"
+    echo -e "'\e[93msudo ./dscli.sh\e[0m' (it'll run osadmin container)"
     echo -e ""
     echo -e "You can use \e[93mfirst_vm.sh\e[0m script in osadmin container"
     echo -e "to build your first VM in demo project and you can use it"
-    echo -e "as a crash course to OpenStack."
+    echo -e "as a crash course for setting up OpenStack cloud."
     echo -e ""
-    echo -e "\e[92m============= DietStack by Kamil Madac 2017 ===============\e[0m"
+    echo -e "\e[92m================== DietStack by Kamil Madac 2018 ====================\e[0m"
     echo -e ""
 elif [[ $COMPUTE_NODE == true ]]; then
     echo ""
@@ -609,7 +609,7 @@ elif [[ $COMPUTE_NODE == true ]]; then
     echo -e ""
     echo -e "Compute node installed"
     echo -e ""
-    echo -e "\e[92m============= DietStack by Kamil Madac 2017  ===============\e[0m"
+    echo -e "\e[92m================= DietStack by Kamil Madac 2018  ====================\e[0m"
     echo -e ""
 else
     echo 'Neither $CONTROL_NODE or $COMPUTE_NODE variable is specified!'
