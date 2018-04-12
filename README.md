@@ -1,5 +1,7 @@
 # Dietstack (Beta)
 
+[![RTD](https://readthedocs.org/projects/dietstack/badge/?version=latest)](https://dietstack.readthedocs.io/) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/dietstack/)
+
 Lightweight private cloud based on OpenStack.
 
 There are many OpenStack distributions which tries to be very universal and to cover all use cases.
@@ -9,6 +11,10 @@ on simplicity of installation, maintenance, upgrade, backup and restore.
 Only requirements are Linux, Docker and Git to clone DietStack.
 All OpenStack services are running in docker containers and all docker images are also built with
 minimal size in mind.
+
+Documentation can be found on [readthedocs](http://dietstack.readthedocs.io/en/latest/).
+You can find us also on [gitter](https://gitter.im/dietstack/).
+
 
 ## Getting Started
 
@@ -31,17 +37,8 @@ script.
 
 ### Installing
 
-Here is example that tell you have to get Dietstack running on your local machine.
-
-```
-git clone https://github.com/dietstack/dietstack.git --recursive
-cd dietstack
-sudo ./ds.sh
-```
-
-Now you see how containers are launched, databases are created and OpenStack is bootstrapped. Once
-deployment processes is finished you can browse to http://192.168.99.1:8082/ or run `./dscli`
-to get to administration container.
+Please check [documentation](http://dietstack.readthedocs.io/en/latest/installation.html#) and
+choose one of the 3 ways how to install DietStack.
 
 ## Running the tests
 
@@ -86,6 +83,6 @@ participated in this project.
 
 ## License
 
-This project is licensed under the Apache License 2.0- see the [LICENSE](LICENSE) file for
+This project is licensed under the Apache License 2.0 see the [LICENSE](LICENSE) file for
 details
 
