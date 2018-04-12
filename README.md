@@ -15,6 +15,8 @@ minimal size in mind.
 Documentation can be found on [readthedocs](http://dietstack.readthedocs.io/en/latest/).
 You can find us also on [gitter](https://gitter.im/dietstack/).
 
+DietStack is designed for small businesses, schools, training centers and for anyone who would
+like to use on-premise private cloud without high operational costs.
 
 ## Getting Started
 
@@ -24,10 +26,10 @@ use our vagrant environment, but it is two-node installation by default.
 
 ### Prerequisites
 
-You need at least 8GB of RAM if you install all services (controller and compute) directly on
-your machine, but the more the better. 
+You need at least 8GB of RAM and 10GB of disk space if you install all services
+(controller and compute) on one machine.
 
-Dietstack is tested in Debian 8/9 and on Ubuntu 16.04 so one of these systems is required.
+Dietstack is tested on Debian 8/9, on Ubuntu 16.04 and 18.04, so one of these systems is required.
 
 You can also install it to Vagrant environment with libvirt provider.
 
@@ -43,9 +45,9 @@ choose one of the 3 ways how to install DietStack.
 ## Running the tests
 
 Each docker service has simple smoke test called `test.sh` in root directory of service repository. 
-This test is run during each build and if test is finished with other value than 0, build is
-considered unsuccesful. 
-Before each push, you should run the `test.sh` to save CI system resources.
+This test is run during each build and if test is finished with exit code 0, build is
+considered succesful. 
+Before each push, you should run the `test.sh` on your local machine to save CI system resources.
 
 Integration tests with [Tempest](https://docs.openstack.org/tempest/latest/) are not ready yet,
 but it is already on our issue list - https://github.com/dietstack/dietstack/issues/2.
