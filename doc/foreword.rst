@@ -18,8 +18,8 @@ deploy OpenStack service. Instead docker containers are built directly from
 upstream OpenStack repositories. This makes DietStack independent from major linux distros.
 DietStack doesn't use any configuration management for deployment. Is is just few bash scripts.
 
-HA configuration is not supported as it increases complexity significantly and
-availability of small installations can be solved other way.
+HA configuration is not supported as it increases complexity significantly.
+Availability of small installations can be solved by other ways.
 
 OpenStack services in DietStack
 -------------------------------
