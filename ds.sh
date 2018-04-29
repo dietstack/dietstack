@@ -488,7 +488,25 @@ if [[ $CONTROL_NODE == true ]]; then
     log_info "Bootstrapping keystone ..."
     # bootstrap openstack settings and upload image to glance
     set +e
-    docker run --rm --net=host ${OSADMIN_VER} /bin/bash -c ". /app/tokenrc; \
+    docker run --rm --net=host --name keystone-bootstrap.${NAME_SUFFIX} ${KEYSTONE_VER} \
+            bash -c "keystone-manage bootstrap \
+                     --bootstrap-password $PASSWORDS \
+                     --bootstrap-username admin \
+                     --bootstrap-project-name admin \
+                     --bootstrap-role-name admin \
+                     --bootstrap-service-name keystone \
+                     --bootstrap-region-id RegionOne \
+                     --bootstrap-admin-url http://$JUST_EXTERNAL_IP:35357 \
+                     --bootstrap-public-url http://$JUST_EXTERNAL_IP:5000 \
+                     --bootstrap-internal-url http://$JUST_EXTERNAL_IP:5000"
+
+    ret=$?
+    if [ $ret -ne 0 ]; then
+        echo "Error: Keystone bootstrap error ${ret}!"
+        exit $ret
+    fi
+
+    docker run --rm --net=host ${OSADMIN_VER} /bin/bash -c ". /app/adminrc; \
                                               ADMIN_IP="$JUST_EXTERNAL_IP" \
                                               INTERNAL_IP="$JUST_EXTERNAL_IP" \
                                               PUBLIC_IP="$JUST_EXTERNAL_IP" \
@@ -496,7 +514,7 @@ if [[ $CONTROL_NODE == true ]]; then
                                               bash -x /app/bootstrap.sh"
     ret=$?
     if [ $ret -ne 0 ] && [ $ret -ne 128 ]; then
-        echo "Error: Keystone bootstrap error ${ret}!"
+        echo "Error: Services/Endpoints bootstrap error ${ret}!"
         exit $ret
     fi
     set -e
