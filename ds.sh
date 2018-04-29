@@ -65,7 +65,7 @@ CONF_FILE=$DS_DIR/settings.sh
 
 if [[ -f $CONF_FILE ]]; then
     log_info "Loading configuration file $CONF_FILE ..."
-    . $CONF_FILE  
+    . $CONF_FILE
 fi
 
 # DOCKER_PROJ_NAME needs to be set due to create_db_osadmin lib function
@@ -120,7 +120,7 @@ EXTERNAL_INTERFACE=${EXTERNAL_INTERFACE:-'eth0'} # if EXTERNAL_BRIDGE is set, th
 EXTERNAL_IP=${EXTERNAL_IP:-192.168.99.1/24} # doesn't need to be set. If so, EXTERNAL_BRIDGE
                                             # floating IPs won't be reacheable from localhost.
                                             # On Compute node needs to be set even EXTERNAL_INTERFACE is set to ''.
-                                            # otherwise spice console in horizon wont work.  
+                                            # otherwise spice console in horizon wont work.
 DS_INTERFACE=${DS_INTERFACE:-lo}            # Interface for vxlans, storage, apis, infra services
 
 DS_INTERFACE_IP=$(ip addr | grep inet | grep -w $DS_INTERFACE | awk -F" " '{print $2}'| sed -e 's/\/.*$//')
@@ -168,7 +168,7 @@ set +e
 requirements
 reqs=$?
 if [[ $reqs != 0 ]]; then
-   log_error "Unsupported OS version!" 
+   log_error "Unsupported OS version!"
    exit 1
 fi
 set -e
@@ -224,7 +224,7 @@ if [[ $CONTROL_NODE == true ]]; then
     fi
 
     log_info "Starting sqldb container ..."
-    mkdir -p ${DS_DIR}/sql     
+    mkdir -p ${DS_DIR}/sql
     if [[ `docker ps -a | grep -w sqldb.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
         docker start sqldb.${NAME_SUFFIX}
     else
@@ -327,7 +327,7 @@ if [[ $CONTROL_NODE == true ]]; then
         create_db_osadmin nova nova $PASSWORDS $PASSWORDS
         create_db_osadmin nova_api nova $PASSWORDS $PASSWORDS || true
         create_db_osadmin nova_cell0 nova $PASSWORDS $PASSWORDS || true
-        
+
         docker run -d --net=host --privileged \
                    --restart unless-stopped \
                    -e DEBUG="true" \
