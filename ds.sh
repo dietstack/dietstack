@@ -161,18 +161,20 @@ cleanup() {
     fi
 }
 
-export DEBIAN_FRONTEND=noninteractive
+if [[ "$INSTALL_REQS" != "false" ]]; then
+    export DEBIAN_FRONTEND=noninteractive
 
-log_info "Install requirements ..."
-. ${MYHOME}/utils/install-reqs-ds.sh
-set +e
-requirements
-reqs=$?
-if [[ $reqs != 0 ]]; then
-   log_error "Unsupported OS version!"
-   exit 1
+    log_info "Install requirements ..."
+    . ${MYHOME}/utils/install-reqs-ds.sh
+    set +e
+    requirements
+    reqs=$?
+    if [[ $reqs != 0 ]]; then
+       log_error "Unsupported OS version!"
+       exit 1
+    fi
+    set -e
 fi
-set -e
 
 log_info "Starting DietStack version $VERSIONS ..."
 
@@ -596,6 +598,7 @@ fi
 
 ## Save configuration of current cloud for later use in destroy or upgrade phases
 > $CONF_FILE
+echo "export INSTALL_REQS=false" >> $CONF_FILE
 echo "export VERSIONS=$VERSIONS" >> $CONF_FILE
 echo "export CONTROL_NODE=$CONTROL_NODE" >> $CONF_FILE
 echo "export COMPUTE_NODE=$COMPUTE_NODE" >> $CONF_FILE
