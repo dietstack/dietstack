@@ -27,8 +27,9 @@ COMPUTE_NODE (true/false) - If true, comptue node containers will be executed. C
 DS_INTERFACE - interface name where dietstack service will use for communication. lo is default.
 EXTERNAL_IP - external ip address in format ip.add.re.ss/netmask. Default is 192.168.99.1/24. Mandatory on control node.
 
-
 CONTROL_NODE_DS_IP - IP address of control node in DS network. Mandatory on compute node.
+
+Full documentation: https://readthedocs.org/projects/dietstack/
 
 Example of deployment:
 ======================
@@ -619,7 +620,11 @@ if [[ $CONTROL_NODE == true ]]; then
     echo -e "to build your first VM in demo project and you can use it"
     echo -e "as a crash course for setting up OpenStack cloud."
     echo -e ""
-    echo -e "\e[92m================== DietStack by Kamil Madac 2018 ====================\e[0m"
+    echo -e "Source code: https://github.com/dietstack/dietstack"
+    echo -e "Documentation: http://dietstack.readthedocs.io/"
+    echo -e "Report a bug: https://github.com/dietstack/dietstack/issues"
+    echo -e ""
+    echo -e "\e[92m===================== DietStack by kmadac 2018 ======================\e[0m"
     echo -e ""
 elif [[ $COMPUTE_NODE == true ]]; then
     echo ""
@@ -627,7 +632,7 @@ elif [[ $COMPUTE_NODE == true ]]; then
     echo -e ""
     echo -e "Compute node installed"
     echo -e ""
-    echo -e "\e[92m================= DietStack by Kamil Madac 2018  ====================\e[0m"
+    echo -e "\e[92m==================== DietStack by kmadac 2018  ======================\e[0m"
     echo -e ""
 else
     echo 'Neither $CONTROL_NODE or $COMPUTE_NODE variable is specified!'
