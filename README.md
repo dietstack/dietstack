@@ -64,6 +64,10 @@ of following steps:
 3. run `VERSIONS=dev-newversion ./ds.sh`
 4. run `first_vm.sh` in `dscli.sh` container 
 
+If you want to access internet from the created instance, you will probably need to run following command on your host (not the instance itself):
+
+    iptables -t nat -A POSTROUTING -p all -o `ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)'` -s 192.168.99.0/24 ! -d 192.168.99.0/24 -j MASQUERADE
+
 ## Contributing
 
 Please read [development](http://dietstack.readthedocs.io/en/latest/development.html) for the
