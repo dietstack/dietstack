@@ -1,0 +1,12 @@
+SQLDB_VER=mariadb:10.1
+RABBITMQ_VER=rabbitmq:3.6.10
+NFS_VER=itsthenetwork/nfs-server-alpine:latest
+KEYSTONE_VER=dietstack/keystone:pike-11-g10f94fc
+GLANCE_VER=dietstack/glance:pike-3-gbe9de77
+NOVA_VER=dietstack/nova:pike-8-g44ec795
+NEUTRON_VER=dietstack/neutron:pike-3-g4a5bc1e
+CINDER_VER=dietstack/cinder:pike-3-g07014ce
+HEAT_VER=dietstack/heat:pike-3-g1539285
+MAGNUM_VER=dietstack/magnum:pike-3-gfbf55f7
+HORIZON_VER=dietstack/horizon:pike-1-gd7d235c
+OSADMIN_VER=dietstack/osadmin:pike-5-g60291a9
