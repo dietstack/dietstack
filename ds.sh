@@ -118,7 +118,7 @@ EXTERNAL_BRIDGE=${EXTERNAL_BRIDGE-'br-ex'} # br-ex will be default only if varia
                                            # to tell the script that we are not going to use EXTERNAL_BRIDGE.
 EXTERNAL_INTERFACE=${EXTERNAL_INTERFACE:-'eth0'} # if EXTERNAL_BRIDGE is set, this var is not used
                                                  # so to use it set EXTERNAL_BRIDGE='' (Compute node)
-EXTERNAL_IP=${EXTERNAL_IP:-192.168.99.1/24} # doesn't need to be set. If so, EXTERNAL_BRIDGE
+EXTERNAL_IP=${EXTERNAL_IP:-192.168.99.1/24} # doesn't need to be set. If it is empty, EXTERNAL_BRIDGE
                                             # floating IPs won't be reacheable from localhost.
                                             # On Compute node needs to be set even EXTERNAL_INTERFACE is set to ''.
                                             # otherwise spice console in horizon wont work.
