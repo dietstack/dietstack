@@ -469,6 +469,7 @@ if [[ $CONTROL_NODE == true ]]; then
                    -e HORIZON_HTTP_PORT="$HORIZON_PORT" \
                    -e JUST_EXTERNAL_IP="$JUST_EXTERNAL_IP" \
                    -v $LOG_DIR/horizon:/var/log/supervisord \
+                   -v $LOG_DIR/horizon/nginx:/var/log/nginx/horizon \
                    --name horizon.${NAME_SUFFIX} \
                    ${HORIZON_VER}
     fi
