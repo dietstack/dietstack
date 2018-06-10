@@ -618,6 +618,8 @@ echo "export DS_INTERFACE=$DS_INTERFACE" >> $CONF_FILE
 echo "export EXTERNAL_BRIDGE=$EXTERNAL_BRIDGE" >> $CONF_FILE
 echo "export CONTROL_NODE_DS_IP=$CONTROL_NODE_DS_IP" >> $CONF_FILE
 
+chmod 640 $CONF_FILE
+
 if [[ $CONTROL_NODE == true ]]; then
     echo ""
     echo -e "\e[92m============================ SUCCESS ================================\e[0m"
