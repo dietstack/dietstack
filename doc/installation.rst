@@ -183,13 +183,12 @@ clone the repository and run the ``ds.sh`` with correct parameters::
     git clone https://github.com/dietstack/dietstack.git --recursive
     cd dietstack
 
-    COMPUTE_NODE=true EXTERNAL_IP='10.0.0.2/16' DS_INTERFACE=ens4 CONTROL_NODE_DS_IP=192.168.1.1 ./ds.sh
+    COMPUTE_NODE=true DS_INTERFACE=ens4 CONTROL_NODE_DS_IP=192.168.1.1 ./ds.sh
 
 So you basically need to set 4 variables:
 
 - COMPUTE_NODE=true - we are installing compute node
 - DS_INTERFACE=ens4 - ``ens4`` is interface physicaly connected to DS switch
 - CONTROL_NODE_DS_IP=192.168.1.1 - tells to DietStack where to find control node in DS network
-- EXTERNAL_IP='10.0.0.2/16' - needs to be set in order to horizon spice console works (same as on control node)
 
 Continue to :ref:`user-guide`
