@@ -69,7 +69,8 @@ is accessible on host in directory ``/srv/dietstack/logs/``
 Stopping DietStack
 ------------------
 
-Run as root::
+Run as root from dietstack directory::
 
-    sudo ./destroy-ds.sh
+    sudo ./utils/destroy-ds.sh
 
+.. warning:: This will destroy all data in database on control node
