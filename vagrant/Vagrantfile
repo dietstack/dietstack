@@ -54,7 +54,7 @@ Vagrant.configure("2") do |config|
         s.inline = <<-SHELL
           echo #{ssh_pub_key} >> /home/$USER/.ssh/authorized_keys
           sudo bash -c "mkdir /root/.ssh/; echo #{ssh_pub_key} >> /root/.ssh/authorized_keys"
-          sudo bash -c "VERSIONS=2 CONTROL_NODE=false DS_INTERFACE=eth2 CONTROL_NODE_DS_IP=192.168.23.2 EXTERNAL_IP='192.168.99.2/24' /root/dietstack/ds.sh"
+          sudo bash -c "VERSIONS=2 CONTROL_NODE=false DS_INTERFACE=eth2 CONTROL_NODE_DS_IP=192.168.23.2 /root/dietstack/ds.sh"
         SHELL
       end
     end

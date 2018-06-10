@@ -530,14 +530,21 @@ fi
 ##### Compute containers
 
 if [[ $COMPUTE_NODE == true ]]; then
+    log_info "Searching for public IP..."
+    # sed will extract ip/hostname from string "http://192.168.99.2:5000" so we get 192.168.99.2
+    set -o pipefail
+    JUST_EXTERNAL_IP=$(docker run --rm --net=host \
+                       -e RC_ADMIN_PASSWORD="$PASSWORDS" \
+                       -e RC_ADMIN_OS_AUTH_URL="http://${CONTROL_NODE_DS_IP}:5000/v3" \
+                       ${OSADMIN_VER} /bin/bash -e -o pipefail -c ". /app/adminrc; openstack endpoint list \
+                       --format csv | grep -E 'identity.*public' | cut -d',' -f 7 | \
+                       sed -rn 's_.*\/\/(.*)\:.*_\1_p'" | tail -n 1)
+    set +o pipefail
+
     log_info "Starting nova-compute container ..."
     if [[ `docker ps -a | grep -w nova-compute.${NAME_SUFFIX}` && "$RESTART" == "true" ]]; then
         docker start nova-compute.${NAME_SUFFIX}
     else
-        if [[ ! -z $EXTERNAL_IP ]]; then
-            JUST_EXTERNAL_IP=$(echo $EXTERNAL_IP | cut -d"/" -f 1)
-        fi
-
         # thanks to clayton.oneil@charter.com
         # source: https://www.openstack.org/videos/video/dockerizing-the-hard-services-neutron-and-nova
         # mounting of cinder volumes done by nova-compute inside container needs to be visible
